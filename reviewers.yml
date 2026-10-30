@@ -1,0 +1,13 @@
+# The reviewer pool: moderators AND admins (the wishlist includes admins). The bot picks two at random for
+# each submission that passes the check, never the author. Everyone listed also needs write access to this
+# repository (via the moderators team), or GitHub won't count their approvals.
+#
+# `tags` is for later, when assignment prefers reviewers whose areas match the submission's tags.
+# Keep the format exactly like the examples: the bot reads `- login:` lines.
+reviewers:
+  - login: tbrazel
+    tags: [Algebraic geometry, Teaching]
+  - login: nbrody
+    tags: [Geometry, Teaching]
+  - login: FayeAlephNil
+    tags: [Geometry, Teaching]
