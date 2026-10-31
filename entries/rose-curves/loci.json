@@ -1,0 +1,47 @@
+{
+  "api": 1,
+  "id": "rose-curves",
+  "title": "Rose curves",
+  "hook": "r = cos(kθ) draws k petals when k is odd and 2k when k is even.",
+  "alt": "A single bright line traces outward and back from the center of a faint circle, drawing evenly spaced petals that touch the circle. Changing the number k changes how many petals appear.",
+  "author": "@tbrazel",
+  "license": "MIT",
+  "tags": [
+    "Geometry",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "k",
+      "type": "range",
+      "label": "Petal number k",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 5
+    }
+  ],
+  "presets": [
+    {
+      "label": "k = 3, three petals",
+      "params": { "k": 3 },
+      "note": "k is odd, so the second half-turn retraces the first and the curve has k petals."
+    },
+    {
+      "label": "k = 2, four petals",
+      "params": { "k": 2 },
+      "note": "k is even, so the second half-turn draws new petals and the curve has 2k."
+    }
+  ],
+  "colors": {
+    "main": "#ff2e74",
+    "secondary": "#22e0e8",
+    "bg": "#050508",
+    "fg": "#ecebf5"
+  },
+  "motion": "pause",
+  "t0": 0
+}
