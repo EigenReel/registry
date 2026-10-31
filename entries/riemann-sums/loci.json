@@ -55,6 +55,7 @@
     }
   ],
   "cycle": 18.2,
+  "bounty": "riemann-order",
   "motion": "pause",
   "t0": 0
 }
