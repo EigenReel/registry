@@ -60,6 +60,10 @@
     }
   ],
   "cycle": 16,
+  "colors": {
+    "main": "#f87171",
+    "secondary": "#67e8f9"
+  },
   "motion": "pause",
   "t0": 4
 }

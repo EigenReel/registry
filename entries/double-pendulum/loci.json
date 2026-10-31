@@ -37,6 +37,10 @@
     }
   ],
   "cycle": 24,
+  "colors": {
+    "main": "#fb7185",
+    "secondary": "#93c5fd"
+  },
   "motion": "pause",
   "t0": 3
 }

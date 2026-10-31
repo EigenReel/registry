@@ -111,6 +111,10 @@
     "julia-circle"
   ],
   "cycle": 30,
+  "colors": {
+    "main": "#818cf8",
+    "secondary": "#fcd34d"
+  },
   "motion": "static",
   "t0": 4
 }

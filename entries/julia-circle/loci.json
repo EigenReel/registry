@@ -46,6 +46,10 @@
   "after": [
     "logistic-bifurcation"
   ],
+  "colors": {
+    "main": "#fde047",
+    "secondary": "#c084fc"
+  },
   "motion": "pause",
   "t0": 6
 }

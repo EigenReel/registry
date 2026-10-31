@@ -43,6 +43,10 @@
       "note": "With few points the envelope dissolves into a visible chord diagram. Where does it stop looking like a curve?"
     }
   ],
+  "colors": {
+    "main": "#ffc857",
+    "secondary": "#7cc6fe"
+  },
   "motion": "pause",
   "t0": 0
 }
