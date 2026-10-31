@@ -1,0 +1,65 @@
+{
+  "api": 1,
+  "id": "logistic-bifurcation",
+  "title": "The road to chaos in the logistic map",
+  "hook": "One parabola, one knob. Turn r up and a steady state splits into 2, 4, 8 cycles, then chaos, then a window of order.",
+  "alt": "Top: a bifurcation diagram, a branching tree of dots that splits from one curve into two, four, then a dense cloud, with a vertical marker at the chosen r. Bottom: a parabola and a diagonal line with a staircase path that bounces between them.",
+  "author": "@may.iterates",
+  "license": "MIT",
+  "tags": [
+    "Dynamics",
+    "Chaos",
+    "Teaching",
+    "Research"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "r",
+      "type": "range",
+      "label": "Growth rate r",
+      "min": 250,
+      "max": 400,
+      "step": 1,
+      "default": 383,
+      "format": "0.00",
+      "scale": 0.01
+    }
+  ],
+  "presets": [
+    {
+      "label": "r = 3.20, a 2-cycle",
+      "params": {
+        "r": 320
+      },
+      "note": "The cobweb settles onto a rectangle: a 2-cycle."
+    },
+    {
+      "label": "r = 4.00, coin flips",
+      "params": {
+        "r": 400
+      },
+      "note": "With x = sin²(πθ) the map becomes θ ↦ 2θ mod 1, as random-looking as coin flips."
+    },
+    {
+      "label": "r = 3.82, intermittency",
+      "params": {
+        "r": 382
+      },
+      "note": "Just left of 3.8284 the orbit idles near a 3-cycle, then bursts away."
+    },
+    {
+      "label": "r = 3.50, a 4-cycle",
+      "params": {
+        "r": 350
+      },
+      "foundBy": "@kmoreau.geom",
+      "note": "Past 1 + √6 ≈ 3.449 the 2-cycle doubles: the cobweb visits four corners before it repeats."
+    }
+  ],
+  "cycle": 16,
+  "motion": "pause",
+  "t0": 4
+}

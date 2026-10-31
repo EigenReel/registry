@@ -1,0 +1,47 @@
+{
+  "api": 1,
+  "id": "galton-board",
+  "title": "A Galton board and the bell curve",
+  "hook": "Each ball bounces left or right at every peg. Pile up enough of them and the histogram becomes a Gaussian.",
+  "alt": "A triangle of pegs with small balls bouncing down through it, one after another. At the bottom the balls stack into bins, and the stacks gradually form a symmetric bell shape that matches a smooth curve drawn over them.",
+  "author": "@demoivre.hall",
+  "license": "MIT",
+  "tags": [
+    "Probability",
+    "Statistics",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "rows",
+      "type": "range",
+      "label": "Rows of pegs",
+      "min": 4,
+      "max": 16,
+      "step": 1,
+      "default": 12
+    }
+  ],
+  "presets": [
+    {
+      "label": "16 rows",
+      "params": {
+        "rows": 16
+      },
+      "note": "The tallest bin should hold C(16, 8)/2¹⁶ ≈ 19.6% of the balls, about 47 of 240."
+    },
+    {
+      "label": "4 rows, Pascal's row",
+      "params": {
+        "rows": 4
+      },
+      "note": "The histogram is 1, 4, 6, 4, 1 and the Gaussian is a poor fit."
+    }
+  ],
+  "cycle": 20,
+  "motion": "pause",
+  "t0": 6
+}

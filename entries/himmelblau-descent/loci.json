@@ -1,0 +1,49 @@
+{
+  "api": 1,
+  "id": "himmelblau-descent",
+  "title": "Four valleys of Himmelblau",
+  "hook": "Twelve gradient-descent walkers with momentum race toward the four minima of a nonconvex function.",
+  "alt": "A contour map of a landscape with four dark valleys. Twelve dots start on a ring around the middle and roll downhill, leaving trails that curve and settle into the four valleys.",
+  "author": "@sofia.opt",
+  "license": "MIT",
+  "tags": [
+    "Optimization",
+    "Gradient descent",
+    "Multivariable calculus",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "eta",
+      "type": "range",
+      "label": "Step size η",
+      "min": 1,
+      "max": 12,
+      "step": 1,
+      "default": 4,
+      "format": "0.000",
+      "scale": 0.001
+    }
+  ],
+  "presets": [
+    {
+      "label": "Overshoot: η = 0.010",
+      "params": {
+        "eta": 10
+      },
+      "note": "Momentum turns into overshoot: walkers ricochet between valleys before settling, or never settle."
+    },
+    {
+      "label": "Steepest descent: η = 0.001",
+      "params": {
+        "eta": 1
+      },
+      "note": "Paths hug the curves of steepest descent, which cross every contour at a right angle."
+    }
+  ],
+  "motion": "pause",
+  "t0": 4
+}

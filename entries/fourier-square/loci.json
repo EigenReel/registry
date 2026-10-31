@@ -1,0 +1,46 @@
+{
+  "api": 1,
+  "id": "fourier-square",
+  "title": "A square wave from spinning circles",
+  "hook": "Each epicycle is one odd harmonic. Add more and watch the Gibbs overshoot refuse to shrink.",
+  "alt": "On the left, a chain of rotating circles, each smaller and faster than the last. On the right, the height of the chain's tip is traced as a wave that approximates a square wave, with ripples that squeeze toward the jumps as more circles are added.",
+  "author": "@epicycle.lab",
+  "license": "MIT",
+  "tags": [
+    "Harmonic analysis",
+    "Fourier series",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "N",
+      "type": "range",
+      "label": "Number of terms N",
+      "min": 1,
+      "max": 40,
+      "step": 1,
+      "default": 6
+    }
+  ],
+  "presets": [
+    {
+      "label": "N = 1, a pure sine",
+      "params": {
+        "N": 1
+      },
+      "note": "One circle gives a pure sine."
+    },
+    {
+      "label": "N = 40, Gibbs overshoot",
+      "params": {
+        "N": 40
+      },
+      "note": "The ripples squeeze toward the jump while their peak stays at about 1.179."
+    }
+  ],
+  "motion": "pause",
+  "t0": 1
+}

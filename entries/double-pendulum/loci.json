@@ -1,0 +1,42 @@
+{
+  "api": 1,
+  "id": "double-pendulum",
+  "title": "Two double pendulums, one thousandth apart",
+  "hook": "Start two double pendulums 0.001 rad apart. For a few seconds they agree. Then they have nothing to do with each other.",
+  "alt": "Two double pendulums hang from one pivot, drawn in two colors, one on top of the other. At first they swing together; after a few seconds one swings off differently and the glowing trails behind their tips tangle apart.",
+  "author": "@levien.tan",
+  "license": "BSD-3-Clause",
+  "tags": [
+    "Dynamics",
+    "Chaos",
+    "Mechanics",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "th",
+      "type": "range",
+      "label": "Initial angle θ₁",
+      "min": 20,
+      "max": 175,
+      "step": 5,
+      "default": 135,
+      "format": "0°"
+    }
+  ],
+  "presets": [
+    {
+      "label": "θ₁ = 20°, small swings",
+      "params": {
+        "th": 20
+      },
+      "note": "Small angles linearize into two normal modes. The motion is quasi-periodic and the copies stay together."
+    }
+  ],
+  "cycle": 24,
+  "motion": "pause",
+  "t0": 3
+}

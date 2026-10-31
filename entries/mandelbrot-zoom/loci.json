@@ -1,0 +1,116 @@
+{
+  "api": 1,
+  "id": "mandelbrot-zoom",
+  "title": "A zoom into the Mandelbrot set, on the GPU",
+  "hook": "A hundred thousand times closer to the edge of the Mandelbrot set, every pixel iterated on the GPU, until 32-bit floats run out of digits.",
+  "alt": "The black-bodied Mandelbrot set glows at its edge in bands of two colors while the view dives toward a point on the boundary, where spirals and filaments open up, and pulls back out. Engaged, the view can be panned and zoomed by hand.",
+  "author": "@escape.time",
+  "license": "MIT",
+  "tags": [
+    "Complex dynamics",
+    "Fractals",
+    "GPU"
+  ],
+  "runtime": "js",
+  "targets": [
+    {
+      "id": "desktop",
+      "render": "webgl2",
+      "entry": "index.js",
+      "requires": [
+        "webgl2"
+      ],
+      "pointer": {
+        "mode": "pan-zoom",
+        "hint": "Drag to pan · scroll to zoom · double-click to zoom in"
+      }
+    },
+    {
+      "id": "mobile",
+      "render": "canvas2d",
+      "entry": "mobile.js",
+      "params": [
+        "iter",
+        "target"
+      ],
+      "note": "On the CPU at half resolution, with at most 200 iterations.",
+      "pointer": {
+        "mode": "pan-zoom",
+        "hint": "Drag to pan · pinch to zoom · double-tap to zoom in"
+      }
+    }
+  ],
+  "params": [
+    {
+      "key": "iter",
+      "type": "range",
+      "label": "Iterations",
+      "min": 50,
+      "max": 1000,
+      "step": 10,
+      "default": 300,
+      "format": "0"
+    },
+    {
+      "key": "target",
+      "type": "select",
+      "label": "Zoom toward",
+      "options": [
+        [
+          "seahorse",
+          "Seahorse valley"
+        ],
+        [
+          "misiurewicz",
+          "Misiurewicz point"
+        ],
+        [
+          "branch",
+          "Branch point"
+        ]
+      ],
+      "default": "seahorse"
+    }
+  ],
+  "presets": [
+    {
+      "label": "Seahorse valley at 1000 iterations",
+      "params": {
+        "iter": 1000,
+        "target": "seahorse"
+      },
+      "t": 13,
+      "note": "At zoom 10^4 the slow-escaping points near the boundary resolve into spirals instead of a blob."
+    },
+    {
+      "label": "50 iterations, the budget shows",
+      "params": {
+        "iter": 50,
+        "target": "seahorse"
+      },
+      "t": 12,
+      "note": "Too few iterations: points that escape late are drawn as if they were in the set."
+    },
+    {
+      "label": "A three-armed branch point",
+      "params": {
+        "iter": 300,
+        "target": "branch"
+      },
+      "t": 14,
+      "note": "Near c ≈ −0.1011 + 0.9563i three filaments meet. Almost every pixel escapes: the set is very thin here."
+    },
+    {
+      "label": "Resume the tour",
+      "params": {},
+      "view": null,
+      "note": "Back to the automatic zoom after you have panned or zoomed yourself."
+    }
+  ],
+  "after": [
+    "julia-circle"
+  ],
+  "cycle": 30,
+  "motion": "static",
+  "t0": 4
+}
