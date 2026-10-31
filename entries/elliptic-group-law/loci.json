@@ -1,0 +1,71 @@
+{
+  "api": 1,
+  "id": "elliptic-group-law",
+  "title": "The group law on an elliptic curve",
+  "hook": "A line through P and Q meets the cubic once more. Reflect that point and you have P + Q.",
+  "alt": "A cubic curve with a line through two points P and Q that crosses it a third time; a dashed vertical line joins that crossing to its mirror image, the sum P + Q, while P slides along the curve. Engaged, either point can be dragged along the curve and the sum follows.",
+  "author": "@kmoreau.geom",
+  "license": "GPL-3.0",
+  "tags": [
+    "Algebraic geometry",
+    "Number theory",
+    "Elliptic curves",
+    "Research",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "pointer": {
+    "mode": "custom",
+    "wheel": false,
+    "hint": "Drag P or Q along the curve"
+  },
+  "params": [
+    {
+      "key": "b",
+      "type": "range",
+      "label": "Coefficient b",
+      "min": 5,
+      "max": 200,
+      "step": 5,
+      "default": 100,
+      "format": "0.00",
+      "scale": 0.01
+    }
+  ],
+  "presets": [
+    {
+      "label": "Split the curve: b = 0.30",
+      "params": {
+        "b": 30
+      },
+      "note": "Below 2/(3√3) ≈ 0.385 the real curve has two components. The unbounded one is the identity component, and a subgroup."
+    },
+    {
+      "label": "P on the oval",
+      "params": {
+        "b": 30
+      },
+      "view": {
+        "P": [
+          -0.95,
+          1
+        ],
+        "Q": [
+          1,
+          -1
+        ]
+      },
+      "note": "With P on the oval and Q on the unbounded branch, P + Q lands back on the oval: the oval is a coset of the identity component."
+    },
+    {
+      "label": "Let P slide again",
+      "params": {},
+      "view": null,
+      "note": "P follows its animation again and Q goes back to its place."
+    }
+  ],
+  "motion": "pause",
+  "t0": 2.2
+}

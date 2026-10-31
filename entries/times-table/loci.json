@@ -1,0 +1,48 @@
+{
+  "api": 1,
+  "id": "times-table",
+  "title": "Multiplication tables on a circle",
+  "hook": "Connect i to k·i mod n and a cardioid appears. Keep going and it grows cusps.",
+  "alt": "A circle with evenly spaced points joined by straight chords. As the multiplier slowly grows, the chords form a glowing heart-shaped curve, then a two-lobed one, then curves with more and more cusps.",
+  "author": "@circle-mod-n",
+  "license": "MIT",
+  "tags": [
+    "Number theory",
+    "Modular arithmetic",
+    "Geometry",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "n",
+      "type": "range",
+      "label": "Points on the circle",
+      "min": 20,
+      "max": 400,
+      "step": 1,
+      "default": 200
+    }
+  ],
+  "presets": [
+    {
+      "label": "n = 101, wait for k = 51",
+      "params": {
+        "n": 101
+      },
+      "t": 271,
+      "note": "51 · 2 ≡ 1 (mod 101), so multiplying by 51 undoes multiplying by 2 and the cardioid's chords come back."
+    },
+    {
+      "label": "n = 30, chords not a curve",
+      "params": {
+        "n": 30
+      },
+      "note": "With few points the envelope dissolves into a visible chord diagram. Where does it stop looking like a curve?"
+    }
+  ],
+  "motion": "pause",
+  "t0": 0
+}

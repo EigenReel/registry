@@ -1,0 +1,54 @@
+{
+  "api": 1,
+  "id": "lorenz-butterfly",
+  "title": "The Lorenz butterfly, two runs at once",
+  "hook": "Two points that start 0.001 apart ride the same three equations and end up on opposite wings of the attractor.",
+  "alt": "A slowly rotating butterfly-shaped curve made of looping lines in two colors, drawn from two nearly identical starting points. The two trails loop together at first, then drift apart and switch between the two wings at different times.",
+  "author": "@ed.lorenz.fan",
+  "license": "Apache-2.0",
+  "tags": [
+    "Dynamics",
+    "Chaos",
+    "Research",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "rho",
+      "type": "range",
+      "label": "Rayleigh number ρ",
+      "min": 5,
+      "max": 50,
+      "step": 1,
+      "default": 28
+    }
+  ],
+  "presets": [
+    {
+      "label": "ρ = 10, a fixed point",
+      "params": {
+        "rho": 10
+      },
+      "note": "Both runs spiral into the same fixed point. Nothing is chaotic below about 13.9."
+    },
+    {
+      "label": "ρ = 28, the butterfly",
+      "params": {
+        "rho": 28
+      },
+      "note": "Wait for the two colors to separate onto different wings."
+    },
+    {
+      "label": "ρ = 20, transient chaos",
+      "params": {
+        "rho": 20
+      },
+      "note": "Trajectories wander chaotically for a long time before settling onto a fixed point."
+    }
+  ],
+  "motion": "pause",
+  "t0": 5
+}

@@ -1,0 +1,51 @@
+{
+  "api": 1,
+  "id": "julia-circle",
+  "title": "Julia sets on a circle of parameters",
+  "hook": "As c circles the origin, the Julia set of z² + c shatters into dust and reassembles.",
+  "alt": "A detailed fractal shape in warm and cool colors with a two-fold symmetry. As a point moves around a circle, the shape tears apart into scattered dust and then joins back into one connected piece.",
+  "author": "@fatou.dust",
+  "license": "BSD-3-Clause",
+  "tags": [
+    "Complex dynamics",
+    "Fractals",
+    "Research"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "iter",
+      "type": "range",
+      "label": "Iteration limit",
+      "min": 20,
+      "max": 200,
+      "step": 10,
+      "default": 70
+    }
+  ],
+  "presets": [
+    {
+      "label": "c = −0.7885, connected",
+      "params": {
+        "iter": 70
+      },
+      "t": 21.2,
+      "note": "c is in the period-2 bulb of the Mandelbrot set, |c + 1| < 1/4, so the critical orbit stays bounded and J_c is connected."
+    },
+    {
+      "label": "c = 0.7885, dust",
+      "params": {
+        "iter": 70
+      },
+      "t": 47.4,
+      "note": "On the real axis past c = 1/4 the critical orbit escapes, so c is outside the Mandelbrot set and J_c is a Cantor set."
+    }
+  ],
+  "after": [
+    "logistic-bifurcation"
+  ],
+  "motion": "pause",
+  "t0": 6
+}

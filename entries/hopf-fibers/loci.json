@@ -1,0 +1,142 @@
+{
+  "api": 1,
+  "id": "hopf-fibers",
+  "title": "The Hopf fibration: linked circles filling space",
+  "hook": "Every point of the 2-sphere lifts to a circle in the 3-sphere, and every two of those circles are linked.",
+  "alt": "A ring of colored tubes, each a closed circle, wraps around a doughnut shape so that every circle threads through all the others, and the arrangement turns slowly. Engaged, it can be orbited and zoomed, and a clicked circle is labeled with its point on the sphere.",
+  "author": "@villarceau",
+  "license": "MIT",
+  "tags": [
+    "Topology",
+    "Geometry",
+    "GPU"
+  ],
+  "runtime": "js",
+  "targets": [
+    {
+      "id": "desktop",
+      "render": "webgl2",
+      "entry": "index.js",
+      "requires": [
+        "webgl2"
+      ],
+      "pointer": {
+        "mode": "orbit",
+        "hint": "Drag to orbit · right-drag to pan · scroll to zoom · click a circle"
+      }
+    },
+    {
+      "id": "mobile",
+      "render": "canvas2d",
+      "entry": "mobile.js",
+      "params": [
+        "lat",
+        "count",
+        "second"
+      ],
+      "pointer": {
+        "mode": "orbit",
+        "hint": "Drag to orbit · pinch to zoom · tap a circle"
+      }
+    },
+    {
+      "id": "download",
+      "format": "html",
+      "url": "https://github.com/loci-viz/hopf-fibers/releases/download/v1.0.0/hopf-fibers.html",
+      "size": 688128,
+      "note": "One self-contained HTML file with three.js inlined, for a lecture room without a network."
+    }
+  ],
+  "params": [
+    {
+      "key": "lat",
+      "type": "range",
+      "label": "Latitude on S²",
+      "min": -40,
+      "max": 80,
+      "step": 1,
+      "default": 0,
+      "format": "0°"
+    },
+    {
+      "key": "count",
+      "type": "range",
+      "label": "Fibers",
+      "min": 8,
+      "max": 64,
+      "step": 1,
+      "default": 24,
+      "format": "0"
+    },
+    {
+      "key": "second",
+      "type": "toggle",
+      "label": "Second ring, 35° north",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "label": "One latitude = one torus",
+      "params": {
+        "lat": 0,
+        "count": 64,
+        "second": false
+      },
+      "note": "Fibers over the equator of S² fill out the projected Clifford torus."
+    },
+    {
+      "label": "Two latitudes link",
+      "params": {
+        "lat": 10,
+        "count": 16,
+        "second": true
+      },
+      "note": "The inner torus comes from latitude 45°. Every one of its circles links every circle of the outer torus."
+    },
+    {
+      "label": "Near the pole",
+      "params": {
+        "lat": 75,
+        "count": 24,
+        "second": false
+      },
+      "note": "Close to the north pole the fibers hug the unit circle, the fiber over the pole itself."
+    },
+    {
+      "label": "Look down the axis",
+      "params": {
+        "lat": 0,
+        "count": 24,
+        "second": false
+      },
+      "view": {
+        "cam": {
+          "yaw": 0,
+          "pitch": 1.5,
+          "dist": 1,
+          "target": [
+            0,
+            0,
+            0
+          ]
+        },
+        "g": [
+          0,
+          0
+        ],
+        "sel": 0
+      },
+      "note": "From above, the fibers over the equator are circles that all pass through the unit circle: the selected one goes once around it."
+    },
+    {
+      "label": "Back to the turning view",
+      "params": {},
+      "view": null,
+      "note": "The camera, the slow turn and the selection go back to how the piece starts."
+    }
+  ],
+  "cycle": 40,
+  "motion": "pause",
+  "t0": 0
+}

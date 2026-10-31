@@ -1,0 +1,60 @@
+{
+  "api": 1,
+  "id": "riemann-sums",
+  "title": "Riemann sums and their errors",
+  "hook": "Rectangles refine from 2 to 64. The inset shows left sums converge like 1/n and midpoints like 1/n².",
+  "alt": "A wavy curve with bars under it that are refined from a few wide rectangles to many thin ones, filling the area under the curve more and more tightly. Numbers show the running error, and a small log-log graph shows the error shrinking.",
+  "author": "@calc-commons",
+  "license": "Apache-2.0",
+  "tags": [
+    "Calculus",
+    "Integration",
+    "Numerical analysis",
+    "Teaching"
+  ],
+  "runtime": "js",
+  "entry": "index.js",
+  "render": "canvas2d",
+  "params": [
+    {
+      "key": "rule",
+      "type": "range",
+      "label": "Sample point",
+      "min": 0,
+      "max": 2,
+      "step": 1,
+      "default": 0,
+      "labels": [
+        "left",
+        "midpoint",
+        "right"
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "label": "Left rule",
+      "params": {
+        "rule": 0
+      },
+      "note": "Error O(1/n): the inset line has slope −1."
+    },
+    {
+      "label": "Right rule",
+      "params": {
+        "rule": 2
+      },
+      "note": "The error has the opposite sign to the left rule. Their average is the trapezoid rule."
+    },
+    {
+      "label": "Midpoint rule",
+      "params": {
+        "rule": 1
+      },
+      "note": "Error O(1/n²): compare the inset's slope with the left rule's."
+    }
+  ],
+  "cycle": 18.2,
+  "motion": "pause",
+  "t0": 0
+}
