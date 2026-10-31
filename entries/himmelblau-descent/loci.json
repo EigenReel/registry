@@ -44,6 +44,10 @@
       "note": "Paths hug the curves of steepest descent, which cross every contour at a right angle."
     }
   ],
+  "colors": {
+    "main": "#a3e635",
+    "secondary": "#d8b4fe"
+  },
   "motion": "pause",
   "t0": 4
 }

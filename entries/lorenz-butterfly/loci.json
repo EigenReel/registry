@@ -49,6 +49,10 @@
       "note": "Trajectories wander chaotically for a long time before settling onto a fixed point."
     }
   ],
+  "colors": {
+    "main": "#fdba74",
+    "secondary": "#a5b4fc"
+  },
   "motion": "pause",
   "t0": 5
 }

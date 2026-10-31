@@ -56,6 +56,10 @@
   ],
   "cycle": 18.2,
   "bounty": "riemann-order",
+  "colors": {
+    "main": "#34d399",
+    "secondary": "#fca5a5"
+  },
   "motion": "pause",
   "t0": 0
 }

@@ -41,6 +41,10 @@
       "note": "The ripples squeeze toward the jump while their peak stays at about 1.179."
     }
   ],
+  "colors": {
+    "main": "#38bdf8",
+    "secondary": "#fb923c"
+  },
   "motion": "pause",
   "t0": 1
 }

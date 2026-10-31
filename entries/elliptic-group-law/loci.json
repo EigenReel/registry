@@ -66,6 +66,10 @@
       "note": "P follows its animation again and Q goes back to its place."
     }
   ],
+  "colors": {
+    "main": "#5eead4",
+    "secondary": "#ff9f68"
+  },
   "motion": "pause",
   "t0": 2.2
 }
