@@ -1,5 +1,8 @@
 // Turns a visualization module into code the sandboxed runner can execute (DEMO_PLAN.md section 6).
-//  - parses with acorn and rejects imports and any export other than `export default { ... }`
+//  - parses with acorn and rejects any export other than `export default { ... }`
+//  - allows imports only from the pinned libraries (template/visualization.js, "IMPORTS"): named imports from
+//    '@eigenreel/kit', and three.js from '@eigenreel/three'. It blanks the import statements and binds the
+//    imported names in a prelude, before the piece's own code, since imports are hoisted.
 //  - rewrites `export default` into an assignment the runner reads
 //  - inserts a loop guard at the top of every loop body so a runaway loop throws instead of freezing the page
 //  - reads title/hook/tags/license/t0/param from the exported object without running it
@@ -16,7 +19,13 @@ export const FRAME_BUDGET_MS = 250;
 const LOOPS = new Set(['ForStatement', 'ForInStatement', 'ForOfStatement', 'WhileStatement', 'DoWhileStatement']);
 // Checks the clock once every 65,536 iterations, so tight loops stay fast.
 const GUARD = `if((++__lg&65535)===0&&__lgc())throw new Error("This frame ran for over ${FRAME_BUDGET_MS} ms, so it was stopped. Is there an infinite loop?");`;
-const KIT = 'hex, mix, rgba, label, clipBox, fsFor';
+// The runner provides the kit helpers as globals, so a named import from KIT_MODULE needs no code unless it renames.
+const KIT_MODULE = '@eigenreel/kit';
+const KIT_NAMES = ['hex', 'mix', 'rgba', 'label', 'clipBox', 'fsFor'];
+const KIT = KIT_NAMES.join(', ');
+// The runner provides the pinned three.js as __loci.three.
+const THREE_MODULE = '@eigenreel/three';
+const ONLY_PINNED = `Only '${KIT_MODULE}' and '${THREE_MODULE}' can be imported. Bundle any other library into this file and list it in \`libraries\`.`;
 // Strict on purpose: these values end up in the page's CSS variables.
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 export const COLORS_MISSING = "List the piece's colors at the top of the file: const COLORS = { main: '#ff2e74', secondary: '#22e0e8', bg: '#050508', fg: '#ecebf5' };";
@@ -61,11 +70,16 @@ export function guard(source) {
 
   const s = new MagicString(source);
   let exported = null;
+  let prelude = '';
   walk(ast, node => {
     switch (node.type) {
       case 'ImportDeclaration':
+        prelude += importBindings(node);
+        // Spaces in place of the statement, keeping its newlines, so lines and columns stay aligned.
+        s.overwrite(node.start, node.end, source.slice(node.start, node.end).replace(/[^\n]/g, ' '));
+        break;
       case 'ImportExpression':
-        throw fail(`Imports aren't allowed. The kit helpers (${KIT}) are already available.`, node);
+        throw fail(`Dynamic import() isn't allowed. ${ONLY_PINNED}`, node);
       case 'MetaProperty':
         throw fail('import.meta is not available here.', node);
       case 'ExportNamedDeclaration':
@@ -92,12 +106,35 @@ export function guard(source) {
   }
   s.overwrite(exported.start, decl.start, '__export = ');
 
-  // Strict mode, like the ES module the author wrote. The prefix has no newline, so lines stay aligned.
-  const code = `(function(){"use strict";let __lg=0;const __lgc=__loci.overtime;let __export;${s.toString()}\n;__loci.define(__export);})();`;
+  // Strict mode, like the ES module the author wrote. The prefix has no newline, so lines stay aligned. The import
+  // bindings sit in an outer scope, so `import { hex as h }` still reaches the global hex when the piece declares
+  // its own hex.
+  const code = `(function(){"use strict";${prelude}(function(){let __lg=0;const __lgc=__loci.overtime;let __export;${s.toString()}\n;__loci.define(__export);})();})();`;
   const meta = decl.type === 'ObjectExpression' ? extractMeta(decl) : {};
   const colors = extractColors(ast);
   if (colors) meta.colors = colors;
   return { code, meta };
+}
+
+/** Checks one import declaration and returns the prelude that binds its names. */
+function importBindings(node) {
+  const from = node.source.value, specs = node.specifiers;
+  const nameOf = sp => (sp.imported.type === 'Identifier' ? sp.imported.name : String(sp.imported.value));
+  if (from === KIT_MODULE) {
+    if (!specs.length || specs.some(sp => sp.type !== 'ImportSpecifier')) throw fail(`Import the kit helpers by name, like import { label } from '${KIT_MODULE}'.`, node);
+    let out = '';
+    for (const sp of specs) {
+      const name = nameOf(sp);
+      if (!KIT_NAMES.includes(name)) throw fail(`'${KIT_MODULE}' has no export ${name}. It has ${KIT}.`, sp);
+      if (sp.local.name !== name) out += `const ${sp.local.name}=${name};`;
+    }
+    return out;
+  }
+  if (from === THREE_MODULE) {
+    if (!specs.length || specs.some(sp => sp.type === 'ImportDefaultSpecifier')) throw fail(`Import three.js like import * as THREE from '${THREE_MODULE}'.`, node);
+    return specs.map(sp => `const ${sp.local.name}=__loci.three${sp.type === 'ImportNamespaceSpecifier' ? '' : `[${JSON.stringify(nameOf(sp))}]`};`).join('');
+  }
+  throw fail(`Can't import '${from}'. ${ONLY_PINNED}`, node);
 }
 
 function propName(p) {
