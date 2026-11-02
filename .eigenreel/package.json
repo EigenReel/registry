@@ -1,0 +1,9 @@
+{
+  "name": "registry-checks",
+  "private": true,
+  "description": "Checker and review bot for the practice registry. spec.js and tex.js are copied from the EigenReel site (scripts/sync-registry-checker.sh); katex is pinned to the version tex.js loads (VER).",
+  "dependencies": {
+    "acorn": "^8.19.0",
+    "katex": "0.16.21"
+  }
+}
