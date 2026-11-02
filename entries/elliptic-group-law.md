@@ -9,16 +9,22 @@ together with a point at infinity $\mathcal{O}$. Here $a = -1$ and you control $
 ## What you're seeing
 
 Draw the line through **P** and **Q**. By Bézout's theorem a line meets a cubic in three points counted with
-multiplicity, so it hits the curve once more, at **P∗Q** (the hollow dot). Reflect that point across the
-$x$-axis, along the dashed line, to get **P + Q** (the orange dot).
+multiplicity, so it hits the curve once more, at **P∗Q** (the hollow ring). Reflect that point across the
+$x$-axis, along the dashed orange line, to get **P + Q** (the glowing orange dot). P and Q are the teal dots.
 
 With $\mathcal{O}$ as the identity and reflection as negation, this rule makes the curve an **abelian group**.
 Commutativity is obvious: the line through P and Q does not care which you name first. Associativity is the hard
 part; one classical proof uses the Cayley–Bacharach theorem for cubics through eight points.
 
-While the piece plays, P slides out along the unbounded branch and back once every fourteen seconds, and Q sits
-still below the axis. The readout at the top gives the equation and its discriminant
-$\Delta = -16(4a^3 + 27b^2)$; the one at the bottom gives the coordinates of the sum.
+While the piece plays, P slides along the lower half of the unbounded branch, from just past the point where it
+crosses the $x$-axis out to $x = 2.3$ and back, once every fourteen seconds, and Q sits still below the axis. A
+fading teal trail shows where P has just been, and a fading orange one where P + Q has just been: as P moves, the
+sum moves along the curve too. With the default $b$, P passes through Q on the way (at about
+[t = 2.15](#t:2.15)): the chord turns into the tangent at Q, and the sum is $2Q$. If the sum leaves the frame, an
+orange arrow at the edge points toward it.
+
+In interact mode the points are named, and the readout at the top left gives the equation, its discriminant
+$\Delta = -16(4a^3 + 27b^2)$ and the coordinates of the sum.
 
 ## The formulas
 
@@ -46,8 +52,11 @@ is $\mathcal{O}$, and $P + Q = \mathcal{O}$: so $Q = -P$.
 - [Put P on the oval](#preset:oval): with P on the oval and Q on the unbounded branch, P + Q lands back on the
   oval. The oval is a coset of the identity component.
 - [Let P equal Q](#preset:double): the chord becomes the tangent at P and the readout shows 2P.
-- Watch [at t = 7](#t:7), when P is furthest out, and then as P passes back over Q's $x$-coordinate: the line
-  turns vertical, and P + Q runs off to $\mathcal{O}$.
+- Watch [at t = 7](#t:7), when P is furthest out: P + Q has slid around to the far left of the curve, near
+  where it crosses the $x$-axis.
+- In interact mode, drag P onto the upper half, straight above Q. As the line turns vertical the sum runs off the
+  frame (the orange arrow at the edge follows it until it is too far away to point at), and the readout shows
+  P + Q running off to $\mathcal{O}$: there $P = -Q$.
 - [Let P slide again](#preset:slide) to put P back on its animation and Q back in its place.
 
 ## Where it leads
