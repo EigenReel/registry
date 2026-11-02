@@ -17,10 +17,16 @@ reached directly and a shared link shows exactly the same swing.
 ## What you're seeing
 
 Two copies start from rest with the same $\theta_2 = 0$. Their $\theta_1$ differ by $0.001$ rad, about
-$0.057^\circ$. The pink pendulum is drawn over the blue one, so while they agree you see only pink. Trails show
-the last stretch of each lower bob's path, about a second of it. The readout at the bottom is the distance
-between the two lower bobs, in rod lengths; it turns pink once the pendulums are more than $0.2$ apart. The
-simulation starts over every 24 seconds.
+$0.057^\circ$. The two are drawn in pink and blue with their light added together, so while they agree they
+overlap as a single white pendulum, and the moment they part each shows its own color. Trails show the last few
+seconds of each lower bob's path, fading with age. The faint circle is everything the lower bob could reach, two
+rod lengths from the pivot. The simulation starts over every 24 seconds.
+
+The dotted line is an **energy ceiling**. Both copies start at rest, so with unit masses and rods the energy
+says $2\cos\theta_1 + \cos\theta_2 \ge 2\cos\theta_1(0) + 1$ for all time. Minimizing the height of the lower
+bob under that constraint shows it can never rise above $-\cos\theta_1(0)$ rod lengths over the pivot (or
+$-2\cos\theta_1(0)$, below the pivot, when $\theta_1(0) < 90^\circ$). For starts above $90^\circ$ that is
+exactly the height the upper bob starts at, which you can see [at t = 0](#t:0).
 
 ## Why they separate
 
