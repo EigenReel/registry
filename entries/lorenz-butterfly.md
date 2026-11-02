@@ -17,8 +17,11 @@ Two solutions start at $(1, 1, 1)$ and $(1.001, 1, 1)$ and are integrated with f
 fixed step of $0.005$, always from time zero, so every moment of the loop is reproducible. Each second of the
 40-second loop covers $1.25$ time units of the system, 50 in all. The view is the orthographic projection onto
 the vertical axis $z$ and a horizontal axis in the $(x, y)$ plane, rotating slowly so the two wings and the
-loops around them show depth. The orange run is drawn over the violet one, so at first only orange shows. The
-readout at the bottom is the distance between the two runs; it turns orange once it passes $1$.
+loops around them show depth; the side of each loop nearer to you is drawn brighter. The two runs are orange and
+violet with their light added together, so while they agree they overlap as one white curve, and once they part
+each shows its own color. Behind the bright trails of the last few seconds, everything each run has traced
+since $t = 0$ stays on screen very faintly, so the attractor fills in as you watch. The two small rings are the
+fixed points $C_\pm$ at the centers of the wings (see below).
 
 ## The mathematics
 
@@ -37,7 +40,8 @@ readout at the bottom is the distance between the two runs; it turns orange once
 - Set [$\rho = 10$](#preset:fixed-point). Both runs spiral into the same fixed point and the picture settles.
   Nothing is chaotic below about $13.9$.
 - Go to [the butterfly](#preset:butterfly), $\rho = 28$, and wait for the two colors to separate onto different
-  wings. Compare the gap [at t = 4](#t:4) with the gap a few seconds later.
+  wings. [At t = 4](#t:4) the curve is still a single white line, and it stays one through the long first
+  spiral; by [t = 15](#t:15) orange and violet have come apart.
 - Try [$\rho = 20$](#preset:transient). Trajectories wander chaotically for a long time before settling onto a
   fixed point.
 
