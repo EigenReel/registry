@@ -17,9 +17,11 @@ By Bézout's theorem, two cubics without a common component meet in $3 \cdot 3 =
 ## What you're seeing
 
 - The **dark red dots** are the eight chosen points. In the feed they drift slowly on small closed loops.
-- The **faint thin curves** are several fixed members of the pencil of cubics through those eight points.
-- The **thick curve** sweeps through the entire pencil, from $F$ to $G$ and back to $F$ (up to sign), once every 12 seconds, so it covers the pencil twice per loop.
-- The **glowing pink dot** is the ninth base point. Nobody placed it. Each frame it is computed from the eight red points, and every curve on the screen, thin or thick, passes through it.
+- The **faint thin curves** are several fixed members of the pencil of cubics through those eight points. Each one flushes pink just after the sweeping curve passes it and fades over the next few seconds, so the web shows where in the pencil the sweep has just been.
+- The **bright, glowing curve** sweeps through the entire pencil, from $F$ to $G$ and back to $F$ (up to sign), once every 12 seconds, so it covers the pencil twice per loop.
+- The **glowing pink dot**, with a ring rippling out of it every three seconds, is the ninth base point. Nobody placed it. Each frame it is computed from the eight red points, and every curve on the screen, thin or bright, passes through it.
+
+In interact mode each red point carries its number, 1 to 8, as in the panel and in the presets below.
 
 Watch the pink dot as the red points drift: the forced point moves too, smoothly and sometimes surprisingly far for a small push. It acts as a hub that every curve in the family threads.
 
@@ -40,13 +42,13 @@ The pencil contains reducible members, and choosing the eight points cleverly tu
 
 ## Try this
 
-- Open [the Pascal configuration](#preset:pascal): points 1 to 6 are on a circle. The thick cubic is paused at the moment it splits into **the circle plus a straight line**. That line runs through points 7 and 8 and the pink ninth point: Pascal's line.
-- With the Pascal points still set, jump to [t = 3.13](#t:3.13) and [t = 9.45](#t:9.45). The thick cubic is now one of the two triangles of alternate sides of the hexagon.
-- Open [Pappus](#preset:pappus): the thick cubic is the two lines of three points together with the line through points 7, 8 and the forced ninth point. [The other Pappus preset](#preset:pappus-lines) pauses on one of the triangles of lines from the proof.
+- Open [the Pascal configuration](#preset:pascal): points 1 to 6 are on a circle. The bright cubic is paused at the moment it splits into **the circle plus a straight line**. That line runs through points 7 and 8 and the pink ninth point: Pascal's line.
+- With the Pascal points still set, jump to [t = 3.13](#t:3.13) and [t = 9.45](#t:9.45). The bright cubic is now one of the two triangles of alternate sides of the hexagon.
+- Open [Pappus](#preset:pappus): the bright cubic is the two lines of three points together with the line through points 7, 8 and the forced ninth point. [The other Pappus preset](#preset:pappus-lines) pauses on one of the triangles of lines from the proof.
 - In interact mode, drag any red point. Predict where the pink point will go before you let go.
 - Line up four red points, slowly. As they approach a common line, the pink point slides onto that line too. When they are exactly collinear, the line becomes part of every cubic in the family, and the ninth point disappears.
 - Drag one red point onto the pink one. The two merge, and the curves all become tangent there.
-- Set "Other cubics drawn" to 12 to see more of the pencil, or to 0 to watch the thick curve sweep alone.
+- Set "Other cubics drawn" to 12 to see more of the pencil, or to 0 to watch the bright curve sweep alone.
 
 The same theorem gives the classical proof that the chord-and-tangent addition on an elliptic curve is associative. The theorem has a long line of generalizations, to curves of any degrees and to higher dimensions, surveyed by Eisenbud, Green and Harris.
 

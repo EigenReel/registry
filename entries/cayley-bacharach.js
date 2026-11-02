@@ -6,7 +6,7 @@ const COLORS = {
   fg: '#e9e7f2',         // the faint web of other cubics, and text
 };
 
-import { label, fsFor } from '@eigenreel/kit';
+import { hex, mix, label, fsFor } from '@eigenreel/kit';
 
 // ---------------------------------------------------------------------------------------------------------------
 // The mathematics. A plane cubic is a vector of 10 coefficients in the monomial basis below. Asking a cubic to pass
@@ -135,20 +135,37 @@ const DRIFT = [[1, 1, 1.74, 0.73], [1, 1, 0.06, 4.49], [2, 1, 4.45, 5.89], [2, 2
 const AMP = 0.08, LOOP = 24, SWEEP = 12;   // one sweep of the whole pencil every 12 s
 const LIM = 1.5;
 
-/* marching squares: the zero set of v (on an (nx+1)×(ny+1) grid of spacing `cell`) as one path */
-function zeroSet(ctx, v, nx, ny, cell) {
-  const W = nx + 1;
-  ctx.beginPath();
+/* scratch for zeroSet, one slot per grid edge: the crossing point, its (at most two) neighbours along the curve,
+   and a mark (1 crossed, 2 drawn); every slot is back to its rest state when zeroSet returns */
+function edgeScratch(nx, ny) {
+  const E = (ny + 1) * nx + ny * (nx + 1);
+  return { E, x: new Float32Array(E), y: new Float32Array(E), n1: new Int32Array(E).fill(-1), n2: new Int32Array(E).fill(-1),
+    mark: new Uint8Array(E), list: new Int32Array(E) };
+}
+
+/* marching squares: the zero set of v (on an (nx+1)×(ny+1) grid of spacing `cell`) as one path. The segments are
+   joined through the grid edges they share into long polylines, so the path has a few contours instead of
+   thousands of two-point pieces (much cheaper to stroke, and the joins are smooth). */
+function zeroSet(ctx, v, nx, ny, cell, Z) {
+  const W = nx + 1, H = (ny + 1) * nx, { x: ex, y: ey, n1, n2, mark, list } = Z;
+  let cnt = 0;
+  // the crossing on horizontal edge (i, j)–(i+1, j), or vertical edge (i, j)–(i, j+1), registered once
+  const hE = (i, j) => {
+    const e = j * nx + i;
+    if (!mark[e]) { const a = v[j * W + i], b = v[j * W + i + 1]; ex[e] = (i + a / (a - b)) * cell; ey[e] = j * cell; mark[e] = 1; list[cnt++] = e; }
+    return e;
+  };
+  const vE = (i, j) => {
+    const e = H + j * W + i;
+    if (!mark[e]) { const a = v[j * W + i], d = v[(j + 1) * W + i]; ex[e] = i * cell; ey[e] = (j + a / (a - d)) * cell; mark[e] = 1; list[cnt++] = e; }
+    return e;
+  };
+  const seg = (p, q) => { if (n1[p] < 0) n1[p] = q; else n2[p] = q; if (n1[q] < 0) n1[q] = p; else n2[q] = p; };
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
     const a = v[j * W + i], b = v[j * W + i + 1], c = v[(j + 1) * W + i + 1], d = v[(j + 1) * W + i];
     const code = (a > 0) | ((b > 0) << 1) | ((c > 0) << 2) | ((d > 0) << 3);
     if (code === 0 || code === 15) continue;
-    const x0 = i * cell, y0 = j * cell;
-    const T = () => [x0 + cell * a / (a - b), y0];
-    const R = () => [x0 + cell, y0 + cell * b / (b - c)];
-    const B = () => [x0 + cell * d / (d - c), y0 + cell];
-    const L = () => [x0, y0 + cell * a / (a - d)];
-    const seg = (p, q) => { ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); };
+    const T = () => hE(i, j), B = () => hE(i, j + 1), L = () => vE(i, j), R = () => vE(i + 1, j);
     switch (code) {
       case 1: case 14: seg(L(), T()); break;
       case 2: case 13: seg(T(), R()); break;
@@ -163,14 +180,34 @@ function zeroSet(ctx, v, nx, ny, cell) {
       }
     }
   }
+  // walk the chains: open ones from an end (on the border of the grid) first, then the closed loops
+  ctx.beginPath();
+  const walk = e0 => {
+    ctx.moveTo(ex[e0], ey[e0]); mark[e0] = 2;
+    let prev = -1, cur = e0;
+    for (;;) {
+      const nx1 = n1[cur] !== prev ? n1[cur] : n2[cur];
+      if (nx1 < 0) break;
+      if (mark[nx1] === 2) { if (nx1 === e0) ctx.closePath(); break; }
+      ctx.lineTo(ex[nx1], ey[nx1]); mark[nx1] = 2; prev = cur; cur = nx1;
+    }
+  };
+  for (let k = 0; k < cnt; k++) { const e = list[k]; if (mark[e] === 1 && n2[e] < 0) walk(e); }
+  for (let k = 0; k < cnt; k++) { const e = list[k]; if (mark[e] === 1) walk(e); }
+  for (let k = 0; k < cnt; k++) { const e = list[k]; n1[e] = -1; n2[e] = -1; mark[e] = 0; }
 }
 
 const P8 = [1, 2, 3, 4, 5, 6, 7, 8];
 
+function makeCanvas(w, h) {
+  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; return cv;
+}
+
 export default {
   title: 'Cayley–Bacharach: eight points force a ninth',
   hook: 'Pick eight points. Every cubic curve through them also passes through one more point, the same one for all of them.',
-  alt: 'Eight dark red dots drift slowly while a family of cubic curves sweeps through them; every curve also threads a ninth, glowing pink dot that moves in step with the others.',
+  alt: 'Eight dark red dots drift slowly while a bright, glowing cubic curve sweeps through a faint web of others that flush pink as it passes; every curve also threads a ninth, pulsing pink dot that moves in step.',
   tags: ['Algebraic geometry', 'Geometry'],
   license: 'MIT',
   author: { name: 'Thomas Brazelton' },
@@ -217,9 +254,24 @@ export default {
   },
 
   draw(ctx, t, params, env, S) {
-    const { w, h } = env.box, C = env.colors;
+    const { w, h } = env.box, C = env.colors, interact = env.mode === 'interact';
     const k = Math.min(w / 2.5, h / 2.75), cx = w / 2, cy = h / 2;
     const sx = x => cx + x * k, sy = y => cy - y * k;
+    const bg = hex(C.bg), fg = hex(C.fg), pink = hex(C.secondary), red = hex(C.main), grey = hex(C.curve);
+    const col = (c, a) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+    // a faint light in the middle of the frame, falling off to bg at the corners: drawn once per size, resolution
+    // and palette at device resolution, so each frame copies it pixel for pixel
+    const dpr = env.dpr || 1, vkey = [w, h, dpr, C.bg, C.curve].join();
+    if (S.vigKey !== vkey) {
+      S.vigKey = vkey;
+      const vw = Math.max(1, Math.round(w * dpr)), vh = Math.max(1, Math.round(h * dpr));
+      S.vig = makeCanvas(vw, vh);
+      const c = S.vig.getContext('2d'), vg = c.createRadialGradient(vw / 2, vh / 2, 0, vw / 2, vh / 2, Math.hypot(vw, vh) * 0.6);
+      vg.addColorStop(0, col(mix(bg, grey, 0.09), 1)); vg.addColorStop(1, C.bg);
+      c.fillStyle = vg; c.fillRect(0, 0, vw, vh);
+    }
+    ctx.drawImage(S.vig, 0, 0, w, h);
 
     // the eight points at time t
     const pts = P8.map((i, n) => {
@@ -245,8 +297,8 @@ export default {
     const cell = Math.max(3, Math.min(w, h) / 160);
     const nx = Math.ceil(w / cell), ny = Math.ceil(h / cell), W = nx + 1;
     const N = W * (ny + 1);
-    if (!S.grid || S.grid.F.length !== N) S.grid = { F: new Float64Array(N), G: new Float64Array(N), V: new Float64Array(N) };
-    const { F: gF, G: gG, V: gV } = S.grid;
+    if (!S.grid || S.grid.nx !== nx || S.grid.ny !== ny) S.grid = { nx, ny, F: new Float64Array(N), G: new Float64Array(N), V: new Float64Array(N), Z: edgeScratch(nx, ny) };
+    const { F: gF, G: gG, V: gV, Z } = S.grid;
     for (let j = 0; j <= ny; j++) {
       const y = (cy - j * cell) / k;
       for (let i = 0; i <= nx; i++) {
@@ -257,22 +309,32 @@ export default {
     const member = th => { const c = Math.cos(th), s = Math.sin(th); for (let i = 0; i < N; i++) gV[i] = c * gF[i] + s * gG[i]; return gV; };
 
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    // the web: other members of the pencil, at fixed angles
-    const m = params.curves;
-    ctx.strokeStyle = C.fg; ctx.globalAlpha = degenerate ? 0.08 : 0.15; ctx.lineWidth = 1;
-    for (let j = 0; j < m; j++) { zeroSet(ctx, member(Math.PI * (j + 0.5) / m), nx, ny, cell); ctx.stroke(); }
-    ctx.globalAlpha = 1;
+    const dim = degenerate ? 0.5 : 1;
 
-    // the sweeping member: one pass through the whole pencil every 12 s
+    // the sweeping member: one pass through the whole pencil every 12 s (θ and θ + π give the same curve)
     const th = Math.PI * (t % SWEEP) / SWEEP;
-    ctx.strokeStyle = C.curve; ctx.lineWidth = 2.4; ctx.globalAlpha = degenerate ? 0.35 : 1;
-    zeroSet(ctx, member(th), nx, ny, cell); ctx.stroke();
-    ctx.globalAlpha = 1;
 
-    const dot = (x, y, r, fill, stroke, lw) => {
-      ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI);
-      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
-      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw || 2; ctx.stroke(); }
+    // the web: other members of the pencil, at fixed angles θ_j. Each one lights up as the sweep passes it and
+    // fades over the next couple of seconds, so the web shows where in the pencil the sweep has just been.
+    const m = params.curves;
+    for (let j = 0; j < m; j++) {
+      const thj = Math.PI * (j + 0.5) / m, lag = ((th - thj) % Math.PI + Math.PI) % Math.PI, glow = Math.exp(-(lag / Math.PI) * SWEEP / 2.2);
+      zeroSet(ctx, member(thj), nx, ny, cell, Z);
+      ctx.strokeStyle = col(mix(fg, pink, 0.85 * glow), dim * (0.12 + 0.55 * glow)); ctx.lineWidth = 1 + 0.6 * glow;
+      ctx.stroke();
+    }
+
+    // the sweep itself: a soft pink glow under a bright core
+    zeroSet(ctx, member(th), nx, ny, cell, Z);
+    ctx.strokeStyle = col(pink, 0.17 * dim); ctx.lineWidth = 6; ctx.stroke();
+    ctx.strokeStyle = col(mix(grey, fg, 0.6), degenerate ? 0.45 : 0.95); ctx.lineWidth = 1.9; ctx.stroke();
+
+    const disc = (x, y, r, fill) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fillStyle = fill; ctx.fill(); };
+    const ring = (x, y, r, stroke, lw) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); };
+    const halo = (x, y, r, c, a) => {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, col(c, a)); g.addColorStop(1, col(c, 0));
+      ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
     };
 
     // the ninth point
@@ -286,30 +348,43 @@ export default {
       }
     }
     if (p9) {
-      const pulse = 0.5 + 0.5 * Math.cos(2 * Math.PI * t / 3);
-      ctx.globalAlpha = 0.18 + 0.12 * pulse;
-      dot(p9[0], p9[1], 13 + 3 * pulse, C.secondary);
-      ctx.globalAlpha = 1;
-      dot(p9[0], p9[1], 7, C.secondary, C.bg, 2);
+      // the forced point: a pulsing glow, a ring that ripples outward every 3 s, and a bright core
+      const [X, Y] = p9, pulse = 0.5 + 0.5 * Math.cos(2 * Math.PI * t / 3), u = (t % 3) / 3;
+      ctx.globalCompositeOperation = 'lighter';
+      halo(X, Y, 30 + 6 * pulse, pink, 0.32 + 0.14 * pulse);
+      ctx.globalCompositeOperation = 'source-over';
+      ring(X, Y, 9 + 26 * u, col(pink, 0.55 * (1 - u) * (1 - u)), 1.4);
+      disc(X, Y, 9, col(bg, 0.75));
+      disc(X, Y, 6.5, C.secondary);
+      disc(X, Y, 3, col(mix(pink, fg, 0.75), 1));
     } else if (off !== null) {
-      // the ninth point is off screen (or at infinity): an arrow at the edge points to it
+      // the ninth point is off screen (or at infinity): a glowing arrow at the edge points to it
       const r = Math.min(w, h) / 2 - 16, ex = cx + Math.cos(off) * r * (w / Math.min(w, h)), ey = cy + Math.sin(off) * r * (h / Math.min(w, h));
-      const ax = Math.min(w - 14, Math.max(14, ex)), ay = Math.min(h - 14, Math.max(14, ey));
+      const ax = Math.min(w - 16, Math.max(16, ex)), ay = Math.min(h - 16, Math.max(16, ey));
+      ctx.globalCompositeOperation = 'lighter';
+      halo(ax, ay, 24, pink, 0.3);
+      ctx.globalCompositeOperation = 'source-over';
       ctx.save(); ctx.translate(ax, ay); ctx.rotate(off);
       ctx.fillStyle = C.secondary; ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-7, -7); ctx.lineTo(-3, 0); ctx.lineTo(-7, 7); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
 
-    // the eight points
+    // the eight points: a dark collar that cuts the curves, a red core with a lighter rim, a faint red glow
+    const fs = fsFor(env.box);
     pts.forEach(([x, y], i) => {
-      const X = sx(x), Y = sy(y);
-      if (env.mode === 'interact' && (S.hover === i || S.drag === i)) dot(X, Y, 12, null, C.main, 1.5);
-      dot(X, Y, 6.5, C.main, C.bg, 2);
+      const X = sx(x), Y = sy(y), hot = interact && (S.hover === i || S.drag === i);
+      halo(X, Y, hot ? 26 : 18, mix(red, fg, 0.2), hot ? 0.5 : 0.28);
+      if (hot) ring(X, Y, 12.5, col(mix(red, fg, 0.45), 0.9), 1.5);
+      disc(X, Y, 8.5, col(bg, 0.8));
+      disc(X, Y, 6.2, C.main);
+      ring(X, Y, 6.2, col(mix(red, fg, 0.45), 1), 1.3);
+      // in interact mode, the points' numbers, as the params and the explanation name them
+      if (interact) label(ctx, env, String(i + 1), X + 10, Y - 9, { size: Math.max(11, fs - 3), alpha: hot ? 1 : 0.6, weight: 600 });
     });
 
     // readouts, in interact mode only
-    if (env.mode === 'interact') {
-      const fs = fsFor(env.box), m2 = 14;
+    if (interact) {
+      const m2 = 14;
       const f = v => (v < 0 ? '−' : '') + Math.abs(v).toFixed(2);
       let msg;
       if (net) msg = 'a whole net of cubics passes through these eight';
