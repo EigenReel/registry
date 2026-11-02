@@ -18,7 +18,13 @@ horizontal unit circle; the fiber over the south pole is the vertical axis. Fibe
 torus. Each fiber goes once around the torus the long way and once the short way, and these tilted circles are the
 Villarceau circles of that torus. Colors follow the longitude of the base point, so neighbors on $S^2$ are neighbors
 in the picture. The whole arrangement turns once around the vertical axis every forty seconds, rocking gently as it
-goes.
+goes, and the far side of it fades into the dark.
+
+The small globe in the bottom-right corner is the base $S^2$ itself: a dot at each base point, in its fiber's color,
+on the circle of latitude they share. It turns with the picture and is seen from the same elevation, and it is drawn
+upside down, north pole at the bottom. That is the way round in which each dot sits on the same side as its circle:
+the fiber over longitude $\lambda$ reaches farthest from the origin in the horizontal direction at angle
+$-\lambda - 90°$, so the longitudes run the other way around the picture's vertical axis than around the globe's.
 
 ## Linking
 
@@ -38,7 +44,8 @@ fibers, is $1$.
 - [Look down the axis](#preset:down-the-axis): from above, the fibers over the equator are circles that all pass
   through the unit circle, and the highlighted one goes once around it. Its label gives the point of $S^2$ it lies
   over, $(\cos\varphi \cos\lambda, \cos\varphi \sin\lambda, \sin\varphi)$ for latitude $\varphi$ and longitude
-  $\lambda$. [Back to the turning view](#preset:turning) restores the camera and clears the highlight.
+  $\lambda$, and its dot on the globe grows. [Back to the turning view](#preset:turning) restores the camera and
+  clears the highlight.
 - In interact mode, drag up or down to tilt the camera, and click a circle to highlight it and label its base
   point; click empty space to clear it. Its neighbors in the picture are its neighbors on the sphere. The camera
   elevation and the highlighted fiber are also ordinary settings, so a shared link keeps them.
