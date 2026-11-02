@@ -9,10 +9,12 @@ mirrors on two tuning forks; today an oscilloscope in X–Y mode draws them from
 
 ## What you're seeing
 
-The faint curve is the whole figure. The bright point moves along it with a fading tail, and the two small dots on
-the edges are the two oscillators on their own: one sliding left and right along the bottom, one up and down along
-the left side. With the inscribed square on, the dots on the square mark where the curve touches it. The label at
-the bottom says after how many turns of $u$ the curve closes, and the ratio it closes with.
+The picture is drawn like an oscilloscope screen in X–Y mode. The glowing teal curve is the whole figure; where it
+crosses itself the glow adds up, as phosphor does. The bright point moves along it with a fading magenta tail, and
+the two small white dots on the edges are the two oscillators on their own: one sliding left and right along the
+bottom, one up and down along the left side. With the inscribed square on, the dots on the square mark where the
+curve touches it. The faint grid behind is a graticule, with a dot every $0.25$ in $x$ and $y$ and a tick every
+$0.05$ along the axes.
 
 ## Why the ratio matters
 
@@ -47,8 +49,9 @@ quarter period ahead of it.
 
 The drawing is computed in C with no standard library, compiled with `clang --target=wasm32`; the source and the
 build command are in the registry next to the piece. Each frame the module returns a list of drawing commands, and
-the JavaScript half replays them on the canvas, so lines stay sharp at any pixel ratio and labels use the site's
-font. The tracer's speed is rounded so that it goes round the closed curve a whole number of times per two-minute
+the JavaScript half replays them on the canvas, so lines stay sharp at any pixel ratio. The JavaScript half also
+adds the look: the graticule, and a glow under every colored line and dot. The part of the list that does not move
+(the square, the touch points and the whole curve) is drawn once and kept until the settings change. The tracer's speed is rounded so that it goes round the closed curve a whole number of times per two-minute
 loop, which is why the loop has no seam.
 
 Reference: J. A. Lissajous, Mémoire sur l'étude optique des mouvements vibratoires, *Annales de Chimie et de

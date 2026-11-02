@@ -6,10 +6,13 @@ even.
 
 ## What you're seeing
 
-The orange curve is traced as $\theta$ runs from $0$ until the curve closes, over six seconds, and then erased
-over the next six. The green segment is the radius to the tracing point, so you can watch $r$ shrink to zero
-between petals and turn negative. The faint circle is $r = 1$, which every petal touches at its tip. The label
-names the curve and counts its petals.
+The curve is traced as $\theta$ runs from $0$ until the curve closes, over six seconds, and then erased over
+the next six; a faint ghost of the whole rose shows where it is headed. The trace is coral where $r \ge 0$ and
+aqua where $r < 0$. The dashed line points in the direction $\theta$, and the solid segment is the radius to the
+glowing tracing point, so you can watch $r$ shrink to zero between petals and turn negative, when the point
+swings to the other side of the origin from the dashed line. The faint polar grid has circles at
+$r = \tfrac14, \tfrac12, \tfrac34$ and spokes every $15^\circ$; its outer circle is $r = 1$, which every petal
+touches at its tip. In interact mode a label names the curve, counts its petals and keys the two colors.
 
 When $r$ is negative, the point $(r, \theta)$ lies on the opposite side of the origin, at angle $\theta + \pi$.
 That is the whole reason odd and even differ. Replacing $\theta$ with $\theta + \pi$ gives
@@ -24,8 +27,10 @@ $$\cos(k\theta + k\pi) = (-1)^k \cos(k\theta).$$
 ## Try this
 
 - Jump to [eight petals](#preset:eight): $k = 4$ is even, so the tracing needs the full turn of $\theta$ and
-  finds eight petals.
-- Stop the tracing [at t = 6](#t:6), the moment the curve is complete, and count the petals against the label.
+  finds eight petals. Coral and aqua alternate: every other petal is drawn with $r < 0$, from the opposite side.
+- Stop the tracing [at t = 6](#t:6), the moment the curve is complete, and count the petals. With the default
+  $k = 5$ the coral petals all sit above the horizontal axis and the aqua ones below it, since $\theta$ only
+  runs over $[0, \pi]$; the petal on the axis is half of each, started with $r > 0$ and finished with $r < 0$.
 - In interact mode, move $k$ from $1$ to $12$ with the panel and predict each petal count before the curve
   finishes. Notice that $k = 2$ gives more petals than $k = 3$.
 

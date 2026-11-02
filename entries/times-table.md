@@ -10,9 +10,10 @@ The multiplier $k$ sweeps slowly upward from $2$ to $62$ over the five-minute lo
 second, so most of the time it is not a whole number and the chords drift between pictures. At $k = 2$ the
 chords envelope a **cardioid**; at $k = 3$, a **nephroid**. For a whole number $k$, as $n \to \infty$ the
 envelope is an **epicycloid with $k - 1$ cusps**: the path of a point on a circle of radius $r$ rolling around
-a fixed circle of radius $(k - 1) r$. The label in the corner names the curve whenever $k$ is close to a whole
-number. The chords are colored by where their starting point sits around the circle, so you can see which part
-of the table draws which part of the curve.
+a fixed circle of radius $(k - 1) r$. The chords are colored by where their starting point sits around the
+circle, rose near point $0$ at the top and gold near point $n/2$ at the bottom, so you can see which part of
+the table draws which part of the curve. Where many chords crowd together, along the envelope, the picture
+glows. The small glowing beads on the ring mark the cusps, explained below.
 
 ## Why it works
 
@@ -23,7 +24,9 @@ $$z(\theta) = \frac{k\,e^{i\theta} + e^{ik\theta}}{k + 1}.$$
 
 The point $z(\theta)$ divides the chord in the ratio $1 : k$, which is why the cusps sit where the chord
 shrinks to a point: there $e^{i\theta} = e^{ik\theta}$, that is $(k - 1)\theta \in 2\pi\mathbb{Z}$, which
-happens $k - 1$ times around the circle.
+happens $k - 1$ times around the circle. The beads sit at exactly these angles, $\theta = 2\pi j / (k - 1)$,
+where the cusps touch the ring. They follow the formula for the limit curve as $n \to \infty$, not the
+particular $n$ on screen.
 
 ## Try this
 
@@ -31,11 +34,12 @@ happens $k - 1$ times around the circle.
   $k = 3$. Count the cusps.
 - Jump to [$n = 101$, $k = 51$](#preset:inverse-of-two). Since $51 \cdot 2 \equiv 1 \pmod{101}$, multiplying
   by $51$ undoes multiplying by $2$: the chord from $i$ to $51 i$ is the chord from $2j$ to $j$ with $j = 51 i$,
-  so you get the cardioid's chords back, and the label's "50 cusps" is wrong for this $n$.
+  so you get the cardioid's chords back. The fifty beads promise fifty cusps, but this $n$ draws only one.
 - Lower the points to [$n = 30$](#preset:thirty) and the envelope dissolves into a visible chord diagram.
   Raise $n$ step by step: where does the picture start to look like a curve?
-- Pause [at t = 40](#t:40), where $k = 10$, and check the nine cusps. Then try [at t = 42.5](#t:42.5), halfway
-  between whole numbers, where the picture is a blur of two curves.
+- Pause [at t = 40](#t:40), where $k = 10$, and check the nine cusps against the nine beads. Then try
+  [at t = 42.5](#t:42.5), halfway between whole numbers, where the picture is a blur of two curves and the last
+  gap between beads is short.
 
 ## In the classroom
 

@@ -6,7 +6,7 @@ const COLORS = {
 };
 
 import * as THREE from '@eigenreel/three';
-import { fsFor, label } from '@eigenreel/kit';
+import { fsFor, label, hex } from '@eigenreel/kit';
 
 const SEG = 160, CYCLE = 40, PICK_STEP = 4, FOV = 35;
 
@@ -28,6 +28,13 @@ function fiber(lat, lon) {
   return pts;
 }
 
+/* The base point at latitude lat and longitude lon (radians) on the globe in the corner: (cos lat cos lon,
+   cos lat sin lon, sin lat) in S², turned half a turn about the X axis, so the north pole points down. The reason:
+   the circle over longitude lon reaches farthest from the origin in the horizontal direction (cos φ, 0, −sin φ) with
+   φ = −lon − π/2 (where α = lon + π/2 in fiber()). Upside down, the globe's dot over lon is at φ = −lon; with
+   globe.rotation.y = −π/2 plus the picture's own turn, every dot sits on the same side as its circle. */
+const onGlobe = (lat, lon, r = 1) => new THREE.Vector3(r * Math.cos(lat) * Math.cos(lon), -r * Math.sin(lat), r * Math.cos(lat) * Math.sin(lon));
+
 /* distance in px from (x, y) to a closed polyline stored as [x0, y0, x1, y1, …] */
 function polyDist(xy, x, y) {
   let best = Infinity;
@@ -42,9 +49,17 @@ function polyDist(xy, x, y) {
 /* the second ring's latitude */
 const second = lat => Math.min(85, lat + 35);
 
+/* empties a group, freeing its meshes' GPU buffers (all but `keep`, a geometry they share) */
+const dispose = (g, keep) => { for (const m of g.children) { if (m.geometry !== keep) m.geometry.dispose(); m.material.dispose(); } g.clear(); };
+
+/* a closed circle of latitude on the globe, as line segments */
+function latCircle(pts, lat, r = 1) {
+  for (let i = 0; i < 96; i++) pts.push(onGlobe(lat, (2 * Math.PI * i) / 96, r), onGlobe(lat, (2 * Math.PI * (i + 1)) / 96, r));
+}
+
 function rebuild(S, params, C) {
-  for (const m of S.group.children) { m.geometry.dispose(); m.material.dispose(); }
-  S.group.clear(); S.fibers = [];
+  dispose(S.group); dispose(S.dots, S.dotGeo); dispose(S.rings);
+  S.fibers = [];
   const rings = [{ lat: params.lat, c0: C.main, c1: C.secondary }];
   if (params.second) rings.push({ lat: second(params.lat), c0: C.fg, c1: C.secondary });
   let R = 0;
@@ -56,27 +71,51 @@ function rebuild(S, params, C) {
   }
   R = Math.min(R, 12);
   for (const f of S.fibers) {
-    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(f.pts, true), SEG, 0.022 * R, 8, true);
-    S.group.add(new THREE.Mesh(tube, new THREE.MeshLambertMaterial({ color: f.col })));
+    const tube = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(f.pts, true), SEG, 0.022 * R, 12, true);
+    S.group.add(new THREE.Mesh(tube, new THREE.MeshStandardMaterial({ color: f.col, roughness: 0.36, metalness: 0.05, emissive: f.col.clone(), emissiveIntensity: 0.08 })));
+    // its base point on the globe, in the same color
+    const dot = new THREE.Mesh(S.dotGeo, new THREE.MeshBasicMaterial({ color: f.col }));
+    dot.position.copy(onGlobe((f.lat * Math.PI) / 180, (f.lon * Math.PI) / 180, 1.0));
+    S.dots.add(dot);
   }
+  // the circles of latitude the base points lie on
+  const pts = [];
+  for (const ring of rings) latCircle(pts, (ring.lat * Math.PI) / 180, 1.002);
+  S.rings.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.fg, transparent: true, opacity: 0.45 })));
   S.R = R;
 }
 
-/* the highlighted fiber stands out with a glow; the others fade toward the background */
+/* the highlighted fiber stands out with a glow; the others fade toward the background, on the globe as well */
 function restyle(S, sel, C) {
   const bg = new THREE.Color(C.bg);
   S.group.children.forEach((m, i) => {
-    const f = S.fibers[i], on = sel === i;
+    const f = S.fibers[i], on = sel === i, dot = S.dots.children[i];
     m.material.color.copy(f.col);
-    if (sel != null && !on) m.material.color.lerp(bg, 0.7);
-    m.material.emissive.copy(f.col).multiplyScalar(on ? 0.55 : 0);
+    dot.material.color.copy(f.col);
+    if (sel != null && !on) { m.material.color.lerp(bg, 0.7); dot.material.color.lerp(bg, 0.6); }
+    m.material.emissive.copy(f.col);
+    m.material.emissiveIntensity = on ? 0.55 : sel != null ? 0 : 0.08;
+    dot.scale.setScalar(on ? 2 : 1);
   });
 }
+
+/* the backdrop: a soft glow in the middle of the box, drawn first with no depth */
+const BACK_VERT = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
+const BACK_FRAG = `precision highp float;
+varying vec2 vUv;
+uniform vec3 u_bg, u_a, u_b;
+uniform float u_aspect;
+void main() {
+  vec2 q = (vUv - 0.5) * vec2(u_aspect, 1.0);
+  float r = length(q);
+  vec3 c = u_bg + (u_a - u_bg) * 0.05 * exp(-4.0 * r * r) + (u_b - u_bg) * 0.012 * exp(-1.5 * r * r);
+  gl_FragColor = vec4(c, 1.0);
+}`;
 
 export default {
   title: 'The Hopf fibration: linked circles filling space',
   hook: 'Every point of the 2-sphere lifts to a circle in the 3-sphere, and every two of those circles are linked.',
-  alt: 'A ring of colored tubes, each a closed circle, wraps around a doughnut shape so that every circle threads through all the others, and the arrangement turns slowly.',
+  alt: 'Glossy colored tubes, each a closed circle, wrap around a doughnut shape so that every circle threads through all the others, and the arrangement turns slowly. A small globe in the corner shows the matching points on the sphere.',
   tags: ['Topology', 'Geometry', 'GPU'],
   license: 'MIT',
   author: { name: 'villarceau' },
@@ -103,12 +142,44 @@ export default {
 
   interact: { hint: 'Drag up or down to tilt · click a circle' },
 
-  // The scene needs no GL context, so setup builds it; the renderer is made on the first frame, when draw has the context.
+  // The scenes need no GL context, so setup builds them; the renderer is made on the first frame, when draw has the context.
   setup(env, S) {
+    const C = env.colors, bg = new THREE.Color(C.bg);
     S.scene = new THREE.Scene(); S.group = new THREE.Group(); S.scene.add(S.group);
-    S.scene.add(new THREE.AmbientLight(0xffffff, 1.1));
-    const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(3, 5, 4); S.scene.add(sun);
+    S.scene.fog = new THREE.Fog(bg, 1, 2);   // depth cue: far parts of the tubes sink toward bg; near and far are set per frame
+    S.scene.add(new THREE.HemisphereLight(new THREE.Color(C.fg), bg, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 2.4); sun.position.set(3, 5, 4); S.scene.add(sun);
+    const rim = new THREE.DirectionalLight(new THREE.Color(C.main), 1.4); rim.position.set(-4, 1.5, -5); S.scene.add(rim);
     S.camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 400);
+
+    // the backdrop, a quad over the whole box
+    const rgb = c => new THREE.Vector3(...hex(c).map(x => x / 255));   // sRGB, as the shader writes it
+    S.back = new THREE.Scene();
+    S.backMat = new THREE.ShaderMaterial({ vertexShader: BACK_VERT, fragmentShader: BACK_FRAG, depthTest: false, depthWrite: false,
+      uniforms: { u_bg: { value: rgb(C.bg) }, u_a: { value: rgb(C.main) }, u_b: { value: rgb(C.secondary) }, u_aspect: { value: 1 } } });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), S.backMat); quad.frustumCulled = false; S.back.add(quad);
+
+    // the globe in the corner: S², the base of the fibration, with a dot at the base point of every fiber drawn
+    S.globeScene = new THREE.Scene(); S.globe = new THREE.Group(); S.globeScene.add(S.globe);
+    S.globe.add(new THREE.Mesh(new THREE.SphereGeometry(0.985, 48, 24), new THREE.MeshBasicMaterial({ color: bg.clone().lerp(new THREE.Color(C.fg), 0.012) })));
+    const grid = [];
+    for (const d of [-60, -30, 0, 30, 60]) latCircle(grid, (d * Math.PI) / 180);
+    for (let m = 0; m < 12; m++) for (let i = 0; i < 48; i++) {
+      const lon = (m * Math.PI) / 6, a0 = -Math.PI / 2 + (Math.PI * i) / 48, a1 = -Math.PI / 2 + (Math.PI * (i + 1)) / 48;
+      grid.push(onGlobe(a0, lon), onGlobe(a1, lon));
+    }
+    S.globe.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(grid), new THREE.LineBasicMaterial({ color: C.fg, transparent: true, opacity: 0.13 })));
+    S.dots = new THREE.Group(); S.globe.add(S.dots);
+    S.rings = new THREE.Group(); S.globe.add(S.rings);
+    S.dotGeo = new THREE.SphereGeometry(0.065, 12, 8);
+    S.globeCam = new THREE.PerspectiveCamera(28, 1, 0.1, 20);   // placed in draw, at the main camera's elevation
+    // its outline, a circle that draw turns to face the camera
+    const edge = [];
+    for (let i = 0; i < 96; i++) edge.push(new THREE.Vector3(Math.cos((2 * Math.PI * i) / 96), Math.sin((2 * Math.PI * i) / 96), 0).multiplyScalar(1.03),
+      new THREE.Vector3(Math.cos((2 * Math.PI * (i + 1)) / 96), Math.sin((2 * Math.PI * (i + 1)) / 96), 0).multiplyScalar(1.03));
+    S.outline = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(edge), new THREE.LineBasicMaterial({ color: C.fg, transparent: true, opacity: 0.3 }));
+    S.globeScene.add(S.outline);
+
     S.key = ''; S.look = ''; S.fibers = [];
   },
 
@@ -131,16 +202,33 @@ export default {
     r.resetState();
     r.setViewport(vp[0], vp[1], vp[2], vp[3]); r.setScissor(vp[0], vp[1], vp[2], vp[3]); r.setScissorTest(true);
 
+    const aspect = w / h;
+    S.backMat.uniforms.u_aspect.value = aspect;
+    r.render(S.back, cam);
+
     // the camera, a function of params: on a sphere around the origin at elevation `elev`, far enough to fit the fibers
-    const aspect = w / h, half = (FOV * Math.PI) / 360;
+    const half = (FOV * Math.PI) / 360;
     const fit = (S.R / Math.tan(Math.min(half, Math.atan(Math.tan(half) * aspect)))) * 1.12;
     const el = (params.elev * Math.PI) / 180;
     cam.aspect = aspect; cam.near = fit * 0.02; cam.far = fit * 4;
     cam.position.set(0, fit * Math.sin(el), fit * Math.cos(el)); cam.up.set(0, 1, 0); cam.lookAt(0, 0, 0);
     cam.updateProjectionMatrix();
+    S.scene.fog.near = fit - S.R * 0.4; S.scene.fog.far = fit + S.R * 1.9;
     const [rx, ry] = spin(t);
     S.group.rotation.set(rx, ry, 0);
     r.render(S.scene, cam);
+
+    // the globe, in a square in the bottom-right corner: turned with the picture and seen from the same elevation, so
+    // each dot is on the same side as its circle
+    const side = Math.round(Math.min(vp[2], vp[3]) * 0.18), m = Math.round(Math.min(vp[2], vp[3]) * 0.03);
+    const gd = 1.12 / Math.tan((14 * Math.PI) / 180);
+    S.globeCam.position.set(0, gd * Math.sin(el), gd * Math.cos(el)); S.globeCam.up.set(0, 1, 0); S.globeCam.lookAt(0, 0, 0);
+    S.outline.lookAt(S.globeCam.position);
+    S.globe.rotation.set(rx, ry - Math.PI / 2, 0);
+    r.setViewport(vp[0] + vp[2] - side - m, vp[1] + m, side, side); r.setScissor(vp[0] + vp[2] - side - m, vp[1] + m, side, side);
+    r.clearDepth();
+    r.render(S.globeScene, S.globeCam);
+    r.setViewport(vp[0], vp[1], vp[2], vp[3]); r.setScissor(vp[0], vp[1], vp[2], vp[3]);
 
     // where every fiber is on screen, in CSS px from the box's top-left: for the label and for picking in interact mode
     S.group.updateMatrixWorld(); cam.updateMatrixWorld();
@@ -151,25 +239,19 @@ export default {
     }
     S.elev = params.elev;   // only for onMode's drag, which starts from the elevation the last frame drew
 
-    const o = env.overlay;
-    if (!o) return;
-    const fs = fsFor(env.box), n = params.count * (params.second ? 2 : 1);
-    label(o, env, 'Hopf fibration, stereographically projected', 6, fs + 4, { size: fs + 1, weight: 700 });
-    label(o, env, `${n} fibers over latitude ${params.lat}°${params.second ? ` and ${second(params.lat)}°` : ''}`, 6, fs * 2.3 + 4, { size: fs, alpha: 0.8 });
-    const f = sel != null && S.fibers[sel];
-    if (f) {
-      // the label sits above the top of the highlighted circle on screen
-      let top = 0;
-      for (let k = 1; k < f.xy.length / 2; k++) if (f.xy[2 * k + 1] < f.xy[2 * top + 1]) top = k;
-      const la = (f.lat * Math.PI) / 180, lo = (f.lon * Math.PI) / 180;
-      const P = [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)];
-      const lx = Math.max(110, Math.min(w - 110, f.xy[2 * top])), ly = Math.min(h - fs * 2.5, Math.max(fs * 4.6, f.xy[2 * top + 1] - 10));
-      label(o, env, `the fiber over (${f.lat}°, ${+f.lon.toFixed(1)}°)`, lx, ly - fs * 1.2, { size: fs, weight: 700, color: C.secondary, align: 'center' });
-      label(o, env, `base point (${P.map(c => c.toFixed(2)).join(', ')}) on S²`, lx, ly, { size: fs, align: 'center' });
-    }
-    const foot = f ? 'it links every other circle exactly once'
-      : env.mode === 'interact' ? 'click a circle to see the point of S² it lies over' : 'every two circles link exactly once';
-    label(o, env, foot, 6, h - 8, { size: fs, weight: 700, color: C.main });
+    // text only for a highlighted fiber: which point of S² it lies over
+    const o = env.overlay, f = sel != null && S.fibers[sel];
+    if (!o || !f) return;
+    const fs = fsFor(env.box);
+    // the label sits above the top of the highlighted circle on screen
+    let top = 0;
+    for (let k = 1; k < f.xy.length / 2; k++) if (f.xy[2 * k + 1] < f.xy[2 * top + 1]) top = k;
+    const la = (f.lat * Math.PI) / 180, lo = (f.lon * Math.PI) / 180;
+    const P = [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)];
+    const lx = Math.max(110, Math.min(w - 110, f.xy[2 * top])), ly = Math.min(h - fs * 2.5, Math.max(fs * 2.6, f.xy[2 * top + 1] - 10));
+    label(o, env, `the fiber over (${f.lat}°, ${+f.lon.toFixed(1)}°)`, lx, ly - fs * 1.2, { size: fs, weight: 700, color: C.secondary, align: 'center' });
+    label(o, env, `base point (${P.map(c => c.toFixed(2)).join(', ')}) on S²`, lx, ly, { size: fs, align: 'center' });
+    if (env.mode === 'interact') label(o, env, 'it links every other circle exactly once', 10, h - 10, { size: fs, weight: 700, color: C.main });
   },
 
   // Interact mode: a vertical drag tilts the camera (the `elev` param), a click on a circle highlights it (the
