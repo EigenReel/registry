@@ -11,10 +11,12 @@ and watching for that moment.
 
 Every pixel of the box is one value of $c$, and the GPU runs the iteration for all of them at once in a fragment
 shader. Points that have not escaped within the iteration budget are drawn in the background color: as far as this
-picture can tell, they are in $M$. Every other point is colored by how fast it escaped, in bands mixed from violet
-and gold. Over the thirty-second loop the camera zooms toward a point on the boundary of $M$ and back out, from a
-width of $3.2$ down to about $3 \times 10^{-5}$ at $t = 15$, a magnification of $10^5$. The readout shows the budget,
-the current zoom and the width of the view; the width turns violet near the deepest point.
+picture can tell, they are in $M$. Every other point is tinted by how fast it escaped, in bands mixed from violet
+and gold, and lit by how close it is to the boundary: the filaments and the edge of $M$ glow, and points far from the
+set fade to dark. Over the thirty-second loop the camera zooms toward a point on the boundary of $M$ and back out,
+from a width of $3.2$ down to about $3 \times 10^{-5}$ at $t = 15$, a magnification of $10^5$. The thin gauge at the
+right edge shows the depth: a tick for every power of ten, filled up to the current zoom, and a violet ring at the
+top, $10^5$, where the floats run out.
 
 ## The escape-time algorithm and smooth coloring
 
@@ -24,7 +26,16 @@ With a large bailout radius (here $R = 16$) the quantity
 $$\mu = n + 1 - \log_2 \ln |z_n|$$
 
 varies continuously with $c$, because near escape $|z|$ roughly squares at every step, so the double logarithm
-counts the fraction of a step left over. The colors are a function of $\mu$.
+counts the fraction of a step left over. The hue is a function of $\mu$.
+
+The brightness comes from the derivative $z_n' = dz_n/dc$, iterated alongside $z$ as $z_{n+1}' = 2 z_n z_n' + 1$. The
+distance from $c$ to the boundary of $M$ is about
+
+$$d = \frac{|z_n| \ln |z_n|}{|z_n'|},$$
+
+and the shader measures it in pixels: a point within a pixel or two of the boundary is drawn at full strength, with a
+soft halo that fades over a few dozen pixels. That is why filaments far thinner than a pixel still show up as
+lines.
 
 ## Why the zoom stops at $10^5$
 

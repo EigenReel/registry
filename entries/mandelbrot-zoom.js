@@ -5,13 +5,17 @@ const COLORS = {
   fg: '#ecebf5',
 };
 
-import { hex, fsFor, label } from '@eigenreel/kit';
+import { hex, rgba } from '@eigenreel/kit';
 
 const VERT = `#version 300 es
 in vec2 p;
 void main() { gl_Position = vec4(p, 0.0, 1.0); }`;
 
 // Every pixel is one c; the loop iterates z -> z^2 + c with a literal cap (MAX_ITER) and stops early at the budget.
+// Alongside z it carries the derivative dz/dc (dz -> 2 z dz + 1), which gives the distance estimate
+// d = |z| ln|z| / |dz| from c to the boundary of the set. Escaped points are tinted by the smooth escape count mu
+// (violet and gold bands, as before) and lit by d measured in pixels: filaments and the edge of the set glow, points far
+// from the boundary stay dark. Points that never escape within the budget are drawn in bg.
 const FRAG = `#version 300 es
 precision highp float;
 #define MAX_ITER 1000
@@ -19,24 +23,41 @@ uniform vec4 u_vp;
 uniform vec2 u_center;
 uniform float u_width;
 uniform int u_iter;
-uniform vec3 u_bg, u_a1, u_a2;
+uniform vec3 u_bg, u_a1, u_a2, u_fg;
 out vec4 color;
 void main() {
   float s = min(u_vp.z, u_vp.w);
   vec2 q = (gl_FragCoord.xy - u_vp.xy - 0.5 * u_vp.zw) / s;
   vec2 c = u_center + q * u_width;
-  vec2 z = vec2(0.0);
+  vec2 z = vec2(0.0), dz = vec2(0.0);
+  bool big = false;   // |dz| past float range: the point is as close to the boundary as this picture can tell
   float n = -1.0;
   for (int i = 0; i < MAX_ITER; i++) {
     if (i >= u_iter) break;
+    if (!big) {
+      dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x) + vec2(1.0, 0.0);
+      big = dot(dz, dz) > 1e34;
+    }
     z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
     if (dot(z, z) > 256.0) { n = float(i); break; }
   }
+  // a soft vignette toward the corners of the box
+  vec2 e = (gl_FragCoord.xy - u_vp.xy) / u_vp.zw - 0.5;
+  float vig = 1.0 - 0.45 * smoothstep(0.18, 0.62, length(e * vec2(u_vp.z / s, u_vp.w / s) * 0.9));
   if (n < 0.0) { color = vec4(u_bg, 1.0); return; }
-  float mu = n + 1.0 - log2(0.5 * log(dot(z, z)));
+  float r2 = dot(z, z);
+  float mu = n + 1.0 - log2(0.5 * log(r2));
   float w = 0.5 + 0.5 * cos(2.2 * log(mu + 1.0) * 3.14159);
   vec3 ink = mix(u_a1, u_a2, w);
-  color = vec4(mix(u_bg, ink, 1.0 - exp(-0.15 * mu)), 1.0);
+  // distance to the boundary in device pixels (0 when the derivative overflowed)
+  float d = big ? 0.0 : 0.5 * sqrt(r2 / max(dot(dz, dz), 1e-30)) * log(r2);
+  float px = d * s / u_width;
+  float edge = exp(-0.45 * px);              // the filament itself
+  float halo = 0.36 * exp(-0.05 * px);       // the light around it
+  float amb = 0.05 + 0.09 * (1.0 - exp(-0.02 * mu));
+  float L = clamp(edge + halo + amb, 0.0, 1.0) * (1.0 - exp(-0.6 * mu));
+  vec3 col = mix(u_bg, ink, L) + u_fg * 0.2 * edge * edge * edge;
+  color = vec4(mix(u_bg, min(col, vec3(1.0)), vig), 1.0);
 }`;
 
 // three boundary points to zoom toward
@@ -65,7 +86,7 @@ function compile(gl, type, src) {
 export default {
   title: 'A zoom into the Mandelbrot set, on the GPU',
   hook: 'A hundred thousand times closer to the edge of the Mandelbrot set, every pixel iterated on the GPU, until 32-bit floats run out of digits.',
-  alt: 'The dark body of the Mandelbrot set glows at its edge in bands of violet and gold while the view dives toward a point on the boundary, where spirals and filaments open up, and pulls back out.',
+  alt: 'The dark body of the Mandelbrot set is outlined by glowing violet and gold filaments while the view dives toward a point on the boundary, where spirals open up, and pulls back out. A thin gauge at the right edge fills with the depth of the zoom.',
   tags: ['Complex dynamics', 'Fractals', 'GPU'],
   license: 'MIT',
   author: { name: 'escape.time' },
@@ -105,7 +126,7 @@ export default {
       gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       gl.bindVertexArray(null);
       const u = {};
-      for (const k of ['u_vp', 'u_center', 'u_width', 'u_iter', 'u_bg', 'u_a1', 'u_a2']) u[k] = gl.getUniformLocation(prog, k);
+      for (const k of ['u_vp', 'u_center', 'u_width', 'u_iter', 'u_bg', 'u_a1', 'u_a2', 'u_fg']) u[k] = gl.getUniformLocation(prog, k);
       S.gpu = { prog, vao, u };
     }
     const { prog, vao, u } = S.gpu, C = env.colors, T = TARGETS[params.target] || TARGETS.seahorse;
@@ -119,16 +140,34 @@ export default {
     gl.uniform2f(u.u_center, cam.re, cam.im);
     gl.uniform1f(u.u_width, cam.w);
     gl.uniform1i(u.u_iter, params.iter);
-    gl.uniform3f(u.u_bg, ...col(C.bg)); gl.uniform3f(u.u_a1, ...col(C.main)); gl.uniform3f(u.u_a2, ...col(C.secondary));
+    gl.uniform3f(u.u_bg, ...col(C.bg)); gl.uniform3f(u.u_a1, ...col(C.main)); gl.uniform3f(u.u_a2, ...col(C.secondary)); gl.uniform3f(u.u_fg, ...col(C.fg));
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     gl.bindVertexArray(null);
 
-    // text on the 2D overlay: the same CSS px as a '2d' piece, (0, 0) at the box's top-left
+    // the depth gauge on the 2D overlay (CSS px, (0, 0) at the box's top-left): a thin rule at the right edge with a tick
+    // for each power of ten of magnification, filled up to the current zoom 10^k; the ring at the top, 10^5, is where
+    // 32-bit floats run out of digits
     const o = env.overlay;
     if (!o) return;
-    const { h } = env.box, fs = fsFor(env.box);
-    label(o, env, `Mandelbrot set, toward ${T.name}`, 6, fs + 4, { size: fs + 1, weight: 700 });
-    label(o, env, `${params.iter} iterations · zoom 10^${cam.k.toFixed(1)}`, 6, fs * 2.3 + 4, { size: fs, alpha: 0.8 });
-    label(o, env, `width ${cam.w.toExponential(1)}`, 6, h - 8, { size: fs, weight: 700, color: cam.k > 4.2 ? C.main : C.fg });
+    const { w, h } = env.box, x = w - Math.max(12, Math.min(22, w * 0.022));
+    const y0 = h * 0.5 + Math.min(110, h * 0.22), y1 = h * 0.5 - Math.min(110, h * 0.22), Y = k => y0 + (y1 - y0) * k / DEPTH;
+    o.lineCap = 'round';
+    o.strokeStyle = rgba(C.bg, 0.45); o.lineWidth = 7;   // a dark backing, so the gauge reads over bright filaments
+    o.beginPath(); o.moveTo(x, y0 + 4); o.lineTo(x, y1 - 4); o.stroke();
+    o.strokeStyle = rgba(C.fg, 0.2); o.lineWidth = 1;
+    o.beginPath(); o.moveTo(x, y0); o.lineTo(x, y1); o.stroke();
+    o.strokeStyle = rgba(C.fg, 0.3);
+    o.beginPath();
+    for (let k = 0; k < DEPTH; k++) { o.moveTo(x - 3, Y(k)); o.lineTo(x + 3, Y(k)); }
+    o.stroke();
+    o.strokeStyle = rgba(C.main, 0.75); o.lineWidth = 1.2;
+    o.beginPath(); o.arc(x, Y(DEPTH), 3.5, 0, 2 * Math.PI); o.stroke();
+    const yk = Y(cam.k), deep = Math.max(0, (cam.k - 4.2) / (DEPTH - 4.2));
+    o.strokeStyle = rgba(C.secondary, 0.6); o.lineWidth = 2;
+    o.beginPath(); o.moveTo(x, y0); o.lineTo(x, yk); o.stroke();
+    const g = o.createRadialGradient(x, yk, 0, x, yk, 12);
+    g.addColorStop(0, rgba(deep > 0 ? C.main : C.secondary, 0.5)); g.addColorStop(1, rgba(C.secondary, 0));
+    o.fillStyle = g; o.beginPath(); o.arc(x, yk, 12, 0, 2 * Math.PI); o.fill();
+    o.fillStyle = C.fg; o.beginPath(); o.arc(x, yk, 2.6, 0, 2 * Math.PI); o.fill();
   },
 };
