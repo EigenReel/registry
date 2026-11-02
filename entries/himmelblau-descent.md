@@ -4,17 +4,18 @@ $$f(x, y) = (x^2 + y - 11)^2 + (x + y^2 - 7)^2$$
 
 Himmelblau's function has four local minima, all with $f = 0$, at $(3, 2)$ and roughly $(-2.805, 3.131)$,
 $(-3.779, -3.283)$ and $(3.584, -1.848)$. It also has one local maximum near $(-0.271, -0.923)$ and four saddle
-points. The four minima are marked with small crosses.
+points. The four minima are marked with faint rings, which light up as walkers come to rest in them.
 
 ## What you're seeing
 
-Twelve walkers start on a circle of radius $4.6$ and follow heavy-ball (momentum) descent,
+Twelve walkers start on the dotted circle, of radius $4.6$, and follow heavy-ball (momentum) descent,
 
 $$v \leftarrow \beta v - \eta \nabla f(p), \qquad p \leftarrow p + v,$$
 
 with $\beta = 0.85$, forty-five steps a second, for at most 360 steps. Where the gradient is very steep it is
 capped at length $60$, so a walker that starts on a cliff does not fly off the map. The contours are drawn at
-evenly spaced levels of $\log(1 + f)$, so the shading is darkest in the four valleys.
+evenly spaced levels of $\log(1 + f)$, and the shading glows brightest in the four valleys. Each trail is
+bright for its last second and a half and fades to a faint record of the path behind it.
 
 The loop holds four runs of ten seconds each. Each run starts from the same circle turned a little further
 ($0.37$ radians per run), so the walkers start at new places and some of them end in different valleys.
